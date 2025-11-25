@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>Daans Vlaggen Spel</title>
+  <title>Daans vlaggenspel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
@@ -19,7 +19,7 @@
     .container {
       background: #ffffff;
       padding: 20px;
-      max-width: 420px;
+      max-width: 460px;
       width: 90%;
       text-align: center;
       border-radius: 16px;
@@ -30,6 +30,10 @@
       margin-top: 0;
       font-size: 1.8rem;
       margin-bottom: 10px;
+    }
+
+    .screen {
+      margin-top: 10px;
     }
 
     #flagWrapper {
@@ -44,7 +48,7 @@
       max-width: 100%;
       border-radius: 8px;
       display: none;
-      border: 3px solid #cccccc; /* ⭐ zichtbaar omlijnd */
+      border: 3px solid #cccccc; /* duidelijk randje om de vlag */
     }
 
     #timer {
@@ -53,7 +57,12 @@
 
     #answer {
       margin-top: 15px;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
+    }
+
+    #question {
+      margin-top: 8px;
+      font-size: 1rem;
     }
 
     .hidden {
@@ -69,6 +78,10 @@
       cursor: pointer;
       background: #007bff;
       color: #ffffff;
+    }
+
+    button.secondary {
+      background: #6c757d;
     }
 
     button:disabled {
@@ -87,85 +100,252 @@
       font-size: 0.75rem;
       color: #999;
     }
+
+    .radio-group {
+      text-align: left;
+      display: inline-block;
+      margin-top: 10px;
+    }
+
+    .radio-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    input[type="text"] {
+      padding: 4px 8px;
+      font-size: 0.9rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-top: 4px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    #scoreboard {
+      margin-top: 8px;
+      font-size: 0.95rem;
+    }
+
+    #turnInfo {
+      margin-top: 8px;
+      font-weight: bold;
+    }
+
+    #targetInfo {
+      font-size: 0.9rem;
+      margin-top: 4px;
+      color: #555;
+    }
+
+    #winnerMessage {
+      margin-top: 12px;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
   </style>
 </head>
 
 <body>
   <div class="container">
+    <h1>Daans vlaggenspel</h1>
 
-    <h1>Daans landenspel</h1>
+    <!-- LOGIN SCHERM -->
+    <div id="loginScreen" class="screen">
+      <p><strong>Speler 1:</strong> Daan</p>
 
-    <div id="flagWrapper">
-      <img id="flagImage" src="" alt="Vlag">
+      <div class="radio-group">
+        <p><strong>Speler 2:</strong></p>
+        <label>
+          <input type="radio" name="player2" value="Papa" checked>
+          Papa
+        </label>
+        <label>
+          <input type="radio" name="player2" value="Mama">
+          Mama
+        </label>
+        <label>
+          <input type="radio" name="player2" value="Anders">
+          Anders:
+          <input type="text" id="player2Custom" placeholder="Naam speler 2">
+        </label>
+      </div>
+
+      <div class="radio-group">
+        <p><strong>Speel tot:</strong></p>
+        <label>
+          <input type="radio" name="target" value="5" checked>
+          5 goede vlaggen
+        </label>
+        <label>
+          <input type="radio" name="target" value="10">
+          10 goede vlaggen
+        </label>
+      </div>
+
+      <button id="startGameBtn">Start spel</button>
     </div>
 
-    <p>Tijd over: <span id="timer">10</span> seconden</p>
+    <!-- SPELSCHERM -->
+    <div id="gameScreen" class="screen hidden">
+      <div id="scoreboard"></div>
+      <div id="targetInfo"></div>
+      <div id="turnInfo"></div>
 
-    <div id="answer" class="hidden"></div>
+      <div id="flagWrapper">
+        <img id="flagImage" src="" alt="Vlag">
+      </div>
 
-    <button id="startBtn">Start spel</button>
-    <button id="nextBtn" disabled>Volgende vlag</button>
+      <p>Tijd over: <span id="timer">10</span> seconden</p>
 
-    <small>Na 10 seconden verschijnt het land automatisch.</small>
+      <div id="answer" class="hidden"></div>
+      <div id="question" class="hidden"></div>
 
-    <!-- ⭐ Disclaimer nu binnen de kaart, netjes eronder -->
-    <p class="disclaimer">
-      Deze website is gemaakt door Johan de Hollander en mag alleen maar gebruikt worden door Daan de Hollander.
-    </p>
+      <button id="goodBtn" class="secondary hidden">Goed</button>
+      <button id="wrongBtn" class="secondary hidden">Niet goed</button>
 
+      <div id="winnerMessage" class="hidden"></div>
+
+      <small>Na 10 seconden verschijnt het land automatisch.</small>
+
+      <p class="disclaimer">
+        Deze website is gemaakt door Johan de Hollander en mag alleen maar gebruikt worden door Daan de Hollander.
+      </p>
+
+      <button id="restartBtn" class="secondary hidden">Opnieuw spelen</button>
+    </div>
   </div>
 
   <script>
+    // 30 landen – codes lowercase voor flagcdn.com
     const flags = [
-      { code: "NL", land: "Nederland" }, { code: "BE", land: "België" }, { code: "DE", land: "Duitsland" },
-      { code: "FR", land: "Frankrijk" }, { code: "ES", land: "Spanje" }, { code: "IT", land: "Italië" },
-      { code: "GB", land: "Verenigd Koninkrijk" }, { code: "US", land: "Verenigde Staten" },
-      { code: "BR", land: "Brazilië" }, { code: "AR", land: "Argentinië" }, { code: "JP", land: "Japan" },
-      { code: "CN", land: "China" }, { code: "ID", land: "Indonesië" }, { code: "AU", land: "Australië" },
-      { code: "ZA", land: "Zuid-Afrika" }, { code: "SE", land: "Zweden" }, { code: "NO", land: "Noorwegen" },
-      { code: "FI", land: "Finland" }, { code: "PL", land: "Polen" }, { code: "TR", land: "Turkije" },
-      { code: "CA", land: "Canada" }, { code: "MX", land: "Mexico" }, { code: "PT", land: "Portugal" },
-      { code: "GR", land: "Griekenland" }, { code: "CH", land: "Zwitserland" }, { code: "AT", land: "Oostenrijk" },
-      { code: "DK", land: "Denemarken" }, { code: "IE", land: "Ierland" }, { code: "IN", land: "India" },
-      { code: "RU", land: "Rusland" }
+      { code: "nl", land: "Nederland" },
+      { code: "be", land: "België" },
+      { code: "de", land: "Duitsland" },
+      { code: "fr", land: "Frankrijk" },
+      { code: "es", land: "Spanje" },
+      { code: "it", land: "Italië" },
+      { code: "gb", land: "Verenigd Koninkrijk" },
+      { code: "us", land: "Verenigde Staten" },
+      { code: "br", land: "Brazilië" },
+      { code: "ar", land: "Argentinië" },
+      { code: "jp", land: "Japan" },
+      { code: "cn", land: "China" },
+      { code: "id", land: "Indonesië" },
+      { code: "au", land: "Australië" },
+      { code: "za", land: "Zuid-Afrika" },
+      { code: "se", land: "Zweden" },
+      { code: "no", land: "Noorwegen" },
+      { code: "fi", land: "Finland" },
+      { code: "pl", land: "Polen" },
+      { code: "tr", land: "Turkije" },
+      { code: "ca", land: "Canada" },
+      { code: "mx", land: "Mexico" },
+      { code: "pt", land: "Portugal" },
+      { code: "gr", land: "Griekenland" },
+      { code: "ch", land: "Zwitserland" },
+      { code: "at", land: "Oostenrijk" },
+      { code: "dk", land: "Denemarken" },
+      { code: "ie", land: "Ierland" },
+      { code: "in", land: "India" },
+      { code: "ru", land: "Rusland" }
     ];
 
-    const flagImage = document.getElementById("flagImage");
-    const timerEl = document.getElementById("timer");
-    const answerEl = document.getElementById("answer");
-    const startBtn = document.getElementById("startBtn");
-    const nextBtn = document.getElementById("nextBtn");
+    // HTML-elementen
+    const loginScreen   = document.getElementById("loginScreen");
+    const gameScreen    = document.getElementById("gameScreen");
+    const startGameBtn  = document.getElementById("startGameBtn");
+
+    const flagImage   = document.getElementById("flagImage");
+    const timerEl     = document.getElementById("timer");
+    const answerEl    = document.getElementById("answer");
+    const questionEl  = document.getElementById("question");
+    const goodBtn     = document.getElementById("goodBtn");
+    const wrongBtn    = document.getElementById("wrongBtn");
+    const scoreboardEl= document.getElementById("scoreboard");
+    const turnInfoEl  = document.getElementById("turnInfo");
+    const targetInfoEl= document.getElementById("targetInfo");
+    const winnerMessageEl = document.getElementById("winnerMessage");
+    const restartBtn  = document.getElementById("restartBtn");
+
+    // Spelvariabelen
+    const speler1 = "Daan";
+    let speler2 = "Papa";
+    let spelers = [speler1, speler2];
+    let scores = {};
+    let currentPlayerIndex = 0; // 0 = Daan, 1 = speler2
+    let targetScore = 5;
 
     let huidigeIndex = null;
     let resterendeTijd = 10;
     let intervalId = null;
+    let gameOver = false;
 
-    // ⭐ Cooldown-lijst: hier bewaren we de laatste 20 gebruikte vlaggen
+    // Laatste 20 vlaggen indices, voor cooldown
     let recent = [];
 
-    function kiesNieuweVlag() {
-      let randomIndex;
+    function leesSpeler2() {
+      const radios = document.querySelectorAll('input[name="player2"]');
+      let gekozen = "Papa";
+      radios.forEach(r => { if (r.checked) gekozen = r.value; });
 
-      // Zolang een vlag binnen de laatste 20 zit, kies opnieuw
+      if (gekozen === "Anders") {
+        const customName = document.getElementById("player2Custom").value.trim();
+        if (customName.length > 0) {
+          return customName;
+        } else {
+          return "Speler 2";
+        }
+      }
+      return gekozen;
+    }
+
+    function leesTargetScore() {
+      const radios = document.querySelectorAll('input[name="target"]');
+      let value = 5;
+      radios.forEach(r => { if (r.checked) value = parseInt(r.value, 10); });
+      return value;
+    }
+
+    function updateScoreboard() {
+      const s1 = scores[speler1] || 0;
+      const s2 = scores[speler2] || 0;
+      scoreboardEl.textContent = `${speler1}: ${s1} punten — ${speler2}: ${s2} punten`;
+      targetInfoEl.textContent = `We spelen tot ${targetScore} goede vlaggen.`;
+    }
+
+    function updateTurnInfo() {
+      const speler = spelers[currentPlayerIndex];
+      turnInfoEl.textContent = `Het is de beurt van ${speler}.`;
+    }
+
+    function kiesNieuweVlag() {
+      if (gameOver) return;
+
+      let randomIndex;
+      // niet dezelfde vlag binnen de laatste 20 (zolang dat kan)
       do {
         randomIndex = Math.floor(Math.random() * flags.length);
-      } while (recent.includes(randomIndex));
+      } while (recent.includes(randomIndex) && recent.length < flags.length);
 
-      // Bewaren & cooldown bijhouden
       recent.push(randomIndex);
       if (recent.length > 20) recent.shift();
 
       huidigeIndex = randomIndex;
       const gekozen = flags[huidigeIndex];
 
-      const url = "https://flagsapi.com/" + gekozen.code + "/flat/128.png";
+      const url = "https://flagcdn.com/w320/" + gekozen.code + ".png";
 
       flagImage.src = url;
       flagImage.alt = "Vlag van " + gekozen.land;
       flagImage.style.display = "block";
 
       answerEl.classList.add("hidden");
-      answerEl.textContent = "";
+      questionEl.classList.add("hidden");
+      goodBtn.classList.add("hidden");
+      wrongBtn.classList.add("hidden");
+
       resterendeTijd = 10;
       timerEl.textContent = resterendeTijd;
 
@@ -184,23 +364,94 @@
     }
 
     function toonAntwoord() {
+      if (gameOver) return;
       const gekozen = flags[huidigeIndex];
+      const speler = spelers[currentPlayerIndex];
+
       answerEl.textContent = "Dit is de vlag van " + gekozen.land + ".";
       answerEl.classList.remove("hidden");
-      nextBtn.disabled = false;
+
+      questionEl.textContent = `Had ${speler} de vlag goed?`;
+      questionEl.classList.remove("hidden");
+
+      goodBtn.classList.remove("hidden");
+      wrongBtn.classList.remove("hidden");
+      goodBtn.disabled = false;
+      wrongBtn.disabled = false;
     }
 
-    startBtn.addEventListener("click", () => {
-      startBtn.disabled = true;
-      nextBtn.disabled = true;
+    function controleerWinnaar() {
+      const speler = spelers[currentPlayerIndex];
+      const score = scores[speler] || 0;
+
+      if (score >= targetScore) {
+        gameOver = true;
+        if (intervalId) clearInterval(intervalId);
+
+        winnerMessageEl.textContent = `${speler} heeft gewonnen! 🎉`;
+        winnerMessageEl.classList.remove("hidden");
+
+        goodBtn.disabled = true;
+        wrongBtn.disabled = true;
+        restartBtn.classList.remove("hidden");
+      }
+    }
+
+    function afrondenBeurt() {
+      if (gameOver) return;
+      // wissel speler
+      currentPlayerIndex = currentPlayerIndex === 0 ? 1 : 0;
+      updateTurnInfo();
+      // meteen volgende vlag laten zien
+      kiesNieuweVlag();
+    }
+
+    // Event handlers
+    startGameBtn.addEventListener("click", () => {
+      speler2 = leesSpeler2();
+      spelers = [speler1, speler2];
+      targetScore = leesTargetScore();
+
+      scores[speler1] = 0;
+      scores[speler2] = 0;
+      currentPlayerIndex = 0; // Daan begint altijd
+      gameOver = false;
+      recent = [];
+
+      winnerMessageEl.classList.add("hidden");
+      restartBtn.classList.add("hidden");
+
+      updateScoreboard();
+      updateTurnInfo();
+
+      loginScreen.classList.add("hidden");
+      gameScreen.classList.remove("hidden");
+
       kiesNieuweVlag();
     });
 
-    nextBtn.addEventListener("click", () => {
-      nextBtn.disabled = true;
-      kiesNieuweVlag();
+    goodBtn.addEventListener("click", () => {
+      if (gameOver) return;
+      const speler = spelers[currentPlayerIndex];
+      scores[speler] = (scores[speler] || 0) + 1;
+      updateScoreboard();
+      controleerWinnaar();
+
+      if (!gameOver) {
+        afrondenBeurt(); // direct naar volgende vlag, andere speler
+      }
+    });
+
+    wrongBtn.addEventListener("click", () => {
+      if (gameOver) return;
+      // geen punten erbij, maar wel beurt afronden en nieuwe vlag
+      afrondenBeurt();
+    });
+
+    restartBtn.addEventListener("click", () => {
+      gameScreen.classList.add("hidden");
+      loginScreen.classList.remove("hidden");
     });
   </script>
-
 </body>
 </html>
