@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Daans landenspel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f4f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 20px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.8rem;
+    }
+
+    #flag {
+      font-size: 5rem;
+      margin: 20px 0;
+    }
+
+    #timer {
+      font-weight: bold;
+    }
+
+    #answer {
+      margin-top: 15px;
+      font-size: 1.2rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    button {
+      margin: 10px 5px 0 5px;
+      padding: 10px 16px;
+      font-size: 1rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #007bff;
+      color: #ffffff;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    small {
+      display: block;
+      margin-top: 12px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Daans landenspel</h1>
+
+    <div id="flag">🏳️</div>
+
+    <p>
+      Tijd over: <span id="timer">10</span> seconden
+    </p>
+
+    <div id="answer" class="hidden"></div>
+
+    <button id="startBtn">Start spel</button>
+    <button id="nextBtn" disabled>Volgende vlag</button>
+
+    <small>Na 10 seconden verschijnt het land automatisch.</small>
+  </div>
+
+  <script>
+    // Lijst met vlaggen (emoji) en landen in het Nederlands
+    const flags = [
+      { emoji: "🇳🇱", land: "Nederland" },
+      { emoji: "🇧🇪", land: "België" },
+      { emoji: "🇩🇪", land: "Duitsland" },
+      { emoji: "🇫🇷", land: "Frankrijk" },
+      { emoji: "🇪🇸", land: "Spanje" },
+      { emoji: "🇮🇹", land: "Italië" },
+      { emoji: "🇬🇧", land: "Verenigd Koninkrijk" },
+      { emoji: "🇺🇸", land: "Verenigde Staten" },
+      { emoji: "🇧🇷", land: "Brazilië" },
+      { emoji: "🇦🇷", land: "Argentinië" },
+      { emoji: "🇯🇵", land: "Japan" },
+      { emoji: "🇨🇳", land: "China" },
+      { emoji: "🇮🇩", land: "Indonesië" },
+      { emoji: "🇦🇺", land: "Australië" },
+      { emoji: "🇿🇦", land: "Zuid-Afrika" },
+      { emoji: "🇸🇪", land: "Zweden" },
+      { emoji: "🇳🇴", land: "Noorwegen" },
+      { emoji: "🇫🇮", land: "Finland" },
+      { emoji: "🇵🇱", land: "Polen" },
+      { emoji: "🇹🇷", land: "Turkije" }
+    ];
+
+    const flagEl = document.getElementById("flag");
+    const timerEl = document.getElementById("timer");
+    const answerEl = document.getElementById("answer");
+    const startBtn = document.getElementById("startBtn");
+    const nextBtn = document.getElementById("nextBtn");
+
+    let huidigeIndex = null;
+    let resterendeTijd = 10;
+    let intervalId = null;
+    let spelGestart = false;
+
+    function kiesNieuweVlag() {
+      // Random vlag kiezen
+      const randomIndex = Math.floor(Math.random() * flags.length);
+      huidigeIndex = randomIndex;
+
+      const gekozen = flags[huidigeIndex];
+      flagEl.textContent = gekozen.emoji;
+      answerEl.classList.add("hidden");
+      answerEl.textContent = "";
+      resterendeTijd = 10;
+      timerEl.textContent = resterendeTijd;
+
+      // Timer opnieuw starten
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+      intervalId = setInterval(tick, 1000);
+    }
+
+    function tick() {
+      resterendeTijd--;
+      timerEl.textContent = resterendeTijd;
+
+      if (resterendeTijd <= 0) {
+        clearInterval(intervalId);
+        toonAntwoord();
+      }
+    }
+
+    function toonAntwoord() {
+      if (huidigeIndex === null) return;
+      const gekozen = flags[huidigeIndex];
+      answerEl.textContent = "Dit is de vlag van " + gekozen.land + ".";
+      answerEl.classList.remove("hidden");
+      nextBtn.disabled = false;
+    }
+
+    startBtn.addEventListener("click", () => {
+      spelGestart = true;
+      startBtn.disabled = true;            // Eén keer starten
+      nextBtn.disabled = true;            // Pas aan na eerste antwoord
+      kiesNieuweVlag();
+    });
+
+    nextBtn.addEventListener("click", () => {
+      nextBtn.disabled = true;
+      kiesNieuweVlag();
+    });
+  </script>
+</body>
+</html>
