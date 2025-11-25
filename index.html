@@ -21,3 +21,186 @@
       padding: 20px;
       max-width: 420px;
       width: 90%;
+      text-align: center;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
+
+    #flagWrapper {
+      margin: 20px 0;
+      min-height: 130px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #flagImage {
+      max-width: 100%;
+      border-radius: 8px;
+      display: none;
+      border: 3px solid #cccccc; /* ⭐ zichtbaar omlijnd */
+    }
+
+    #timer {
+      font-weight: bold;
+    }
+
+    #answer {
+      margin-top: 15px;
+      font-size: 1.2rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    button {
+      margin: 10px 5px 0 5px;
+      padding: 10px 16px;
+      font-size: 1rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #007bff;
+      color: #ffffff;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    small {
+      display: block;
+      margin-top: 10px;
+      color: #555;
+    }
+
+    .disclaimer {
+      margin-top: 12px;
+      font-size: 0.75rem;
+      color: #999;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <h1>Daans landenspel</h1>
+
+    <div id="flagWrapper">
+      <img id="flagImage" src="" alt="Vlag">
+    </div>
+
+    <p>Tijd over: <span id="timer">10</span> seconden</p>
+
+    <div id="answer" class="hidden"></div>
+
+    <button id="startBtn">Start spel</button>
+    <button id="nextBtn" disabled>Volgende vlag</button>
+
+    <small>Na 10 seconden verschijnt het land automatisch.</small>
+
+    <!-- ⭐ Disclaimer nu binnen de kaart, netjes eronder -->
+    <p class="disclaimer">
+      Deze website is gemaakt door Johan de Hollander en mag alleen maar gebruikt worden door Daan de Hollander.
+    </p>
+
+  </div>
+
+  <script>
+    const flags = [
+      { code: "NL", land: "Nederland" }, { code: "BE", land: "België" }, { code: "DE", land: "Duitsland" },
+      { code: "FR", land: "Frankrijk" }, { code: "ES", land: "Spanje" }, { code: "IT", land: "Italië" },
+      { code: "GB", land: "Verenigd Koninkrijk" }, { code: "US", land: "Verenigde Staten" },
+      { code: "BR", land: "Brazilië" }, { code: "AR", land: "Argentinië" }, { code: "JP", land: "Japan" },
+      { code: "CN", land: "China" }, { code: "ID", land: "Indonesië" }, { code: "AU", land: "Australië" },
+      { code: "ZA", land: "Zuid-Afrika" }, { code: "SE", land: "Zweden" }, { code: "NO", land: "Noorwegen" },
+      { code: "FI", land: "Finland" }, { code: "PL", land: "Polen" }, { code: "TR", land: "Turkije" },
+      { code: "CA", land: "Canada" }, { code: "MX", land: "Mexico" }, { code: "PT", land: "Portugal" },
+      { code: "GR", land: "Griekenland" }, { code: "CH", land: "Zwitserland" }, { code: "AT", land: "Oostenrijk" },
+      { code: "DK", land: "Denemarken" }, { code: "IE", land: "Ierland" }, { code: "IN", land: "India" },
+      { code: "RU", land: "Rusland" }
+    ];
+
+    const flagImage = document.getElementById("flagImage");
+    const timerEl = document.getElementById("timer");
+    const answerEl = document.getElementById("answer");
+    const startBtn = document.getElementById("startBtn");
+    const nextBtn = document.getElementById("nextBtn");
+
+    let huidigeIndex = null;
+    let resterendeTijd = 10;
+    let intervalId = null;
+
+    // ⭐ Cooldown-lijst: hier bewaren we de laatste 20 gebruikte vlaggen
+    let recent = [];
+
+    function kiesNieuweVlag() {
+      let randomIndex;
+
+      // Zolang een vlag binnen de laatste 20 zit, kies opnieuw
+      do {
+        randomIndex = Math.floor(Math.random() * flags.length);
+      } while (recent.includes(randomIndex));
+
+      // Bewaren & cooldown bijhouden
+      recent.push(randomIndex);
+      if (recent.length > 20) recent.shift();
+
+      huidigeIndex = randomIndex;
+      const gekozen = flags[huidigeIndex];
+
+      const url = "https://flagsapi.com/" + gekozen.code + "/flat/128.png";
+
+      flagImage.src = url;
+      flagImage.alt = "Vlag van " + gekozen.land;
+      flagImage.style.display = "block";
+
+      answerEl.classList.add("hidden");
+      answerEl.textContent = "";
+      resterendeTijd = 10;
+      timerEl.textContent = resterendeTijd;
+
+      if (intervalId) clearInterval(intervalId);
+      intervalId = setInterval(tick, 1000);
+    }
+
+    function tick() {
+      resterendeTijd--;
+      timerEl.textContent = resterendeTijd;
+
+      if (resterendeTijd <= 0) {
+        clearInterval(intervalId);
+        toonAntwoord();
+      }
+    }
+
+    function toonAntwoord() {
+      const gekozen = flags[huidigeIndex];
+      answerEl.textContent = "Dit is de vlag van " + gekozen.land + ".";
+      answerEl.classList.remove("hidden");
+      nextBtn.disabled = false;
+    }
+
+    startBtn.addEventListener("click", () => {
+      startBtn.disabled = true;
+      nextBtn.disabled = true;
+      kiesNieuweVlag();
+    });
+
+    nextBtn.addEventListener("click", () => {
+      nextBtn.disabled = true;
+      kiesNieuweVlag();
+    });
+  </script>
+
+</body>
+</html>
